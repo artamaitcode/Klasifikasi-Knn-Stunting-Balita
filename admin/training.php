@@ -104,28 +104,7 @@ include "header.php";
             </ul>
         </div>
     </div>
-
-
-
-
-
     <!-- modal input -->
-    <!-- <?php 
-		$carikode = mysql_query("select max(cast(substring(kode_nama,3) AS INT)) from tbl_namatraining") or die (mysql_error());
-  		// menjadikannya array
-		// $datakode = mysql_fetch_array($carikode[0]);
-  		// jika $datakode
-		if ($carikode) {
-			$nilaikode = $carikode;
-   		// menjadikan $nilaikode ( int )
-			// $kode = (int) $nilaikode;
-   		// setiap $kode di tambah 1
-			$nilaikode = $nilaikode + 1;
-			$kode_otomatis = "AB".str_pad($nilaikode, 3,"0", STR_PAD_RIGHT);
-		} else {
-			$kode_otomatis = "AB01";
-		}
-		?> -->
     <?php 
 // Query untuk mendapatkan nilai maksimum dari substring kode_nama
 $carikode = mysql_query("SELECT MAX(CAST(SUBSTRING(kode_nama, 3) AS INT)) AS max_kode FROM tbl_namatraining") or die(mysql_error());
