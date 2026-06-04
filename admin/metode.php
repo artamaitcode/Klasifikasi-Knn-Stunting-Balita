@@ -30,7 +30,7 @@ if (isset($_GET['aksi'])) {
     <div class="col-sm-8 text-left">
         <div class="panel panel-container" style="padding: 30px; box-shadow: 2px 2px 5px #888888;">
             <div class="bootstrap-table">
-                <h4> <b>Klasifikasi Penerima Bantuan Pangan Menggunakan Metode K-NN </b></h4>
+                <h4> <b>Klasifikasi Metode K-Nearest Neighbor Untuk Prediksi Stunting Balita </b></h4>
             </div>
 
             <div class="row">

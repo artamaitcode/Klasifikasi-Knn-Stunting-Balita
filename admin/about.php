@@ -48,8 +48,8 @@ body {
                         <br>
                         <hr>
                         <br>
-                        <h3>Nama : ARIEF RAHMAN PRATAMA</h3>
-                        <h3>Nim : 112010154</h3>
+                        <h3>Nama : </h3>
+                        <h3>Nim : </h3>
                         <h3>Prodi : Teknik Informatika</h3>
                     </center>
                     <br>

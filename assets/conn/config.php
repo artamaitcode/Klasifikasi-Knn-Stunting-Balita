@@ -1,5 +1,5 @@
 <?php
-	include "fix_mysql.inc.php";	
+	include ".ifix_mysqlnc.php";	
 	$host = "localhost";
 	$user = "root";
 	$pass = "";
