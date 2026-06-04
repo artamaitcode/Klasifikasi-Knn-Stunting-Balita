@@ -107,7 +107,7 @@ include "header.php";
     <!-- modal input -->
     <?php 
 // Query untuk mendapatkan nilai maksimum dari substring kode_nama
-$carikode = mysql_query("SELECT MAX(CAST(SUBSTRING(kode_nama, 3) AS INT)) AS max_kode FROM tbl_namatraining") or die(mysql_error());
+$carikode = mysql_query("SELECT MAX(CAST(SUBSTRING(kode_nama, 3) AS UNSIGNED)) AS max_kode FROM tbl_namatraining") or die(mysql_error());
 
 // Mengambil hasil query sebagai array asosiatif
 $datakode = mysql_fetch_assoc($carikode);
