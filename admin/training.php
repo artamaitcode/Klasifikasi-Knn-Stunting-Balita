@@ -2,8 +2,7 @@
 include "header.php";
 ?>
 
-<div class="container-fluid text-center">
-    <div class="row content">
+<div class="row">
     <div class="col-sm-2 sidenav">
         <p><a href="index.php"><button type="button" class="btn btn-primary btn-block">BERANDA</button></a>
         </p>
@@ -170,5 +169,4 @@ if ($datakode && $datakode['max_kode'] !== null) {
         </div>
     </div>
 
-    </div>
 </div>
