@@ -22,7 +22,7 @@ include "header.php";
     <div class="col-sm-8 text-left">
         <div class="panel panel-container" style="padding: 30px; box-shadow: 2px 2px 5px #888888;">
             <div class="bootstrap-table">
-                <h4>Hasil klasifikasi Penerima Bantuan Pangan Menggunkan Metode K-NN (K-Nearest Neighbor)</h4>
+                <h4>Hasil klasifikasi Metode K-Nearest Neighbor Untuk Prediksi Stunting Balita</h4>
                 <br>
 
                 <?php 
