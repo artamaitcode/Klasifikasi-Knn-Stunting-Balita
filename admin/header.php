@@ -11,9 +11,8 @@ include '../assets/conn/config.php';
     <link href="../assets/css/dataTables.bootstrap.min.css" rel="stylesheet">
 
     <script type="text/javascript" src="../assets/js/jquery.min.js"></script>
-    <script type="text/javascript" src="../assets/js/jquery-ui.js"></script>
-    <script type="text/javascript" src="../assets/js/jquery.js"></script>
     <script type="text/javascript" src="../assets/js/bootstrap.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery-ui.js"></script>
 </head>
 
 <body>
