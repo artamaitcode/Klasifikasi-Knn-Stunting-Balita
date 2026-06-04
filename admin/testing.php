@@ -2,7 +2,8 @@
 include "header.php";
 ?>
 
-<div class="row">
+<div class="container-fluid text-center">
+    <div class="row content">
     <div class="col-sm-2 sidenav">
         <p><a href="index.php"><button type="button" class="btn btn-primary btn-block">BERANDA</button></a>
         </p>
@@ -17,6 +18,7 @@ include "header.php";
         <p><a href="about.php"><button type="button" class="btn btn-primary btn-block">ABOUT</button></a>
         </p>
     </div>
+</div>
 
 
 

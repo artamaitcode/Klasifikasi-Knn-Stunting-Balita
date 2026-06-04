@@ -12,7 +12,8 @@ if (isset($_GET['aksi'])) {
 }
 ?>
 
-<div class="row content">
+<div class="container-fluid text-center">
+    <div class="row content">
     <div class="col-sm-2 sidenav">
         <p><a href="index.php"><button type="button" class="btn btn-primary btn-block">BERANDA</button></a>
         </p>
@@ -26,6 +27,7 @@ if (isset($_GET['aksi'])) {
         <p><a href="about.php"><button type="button" class="btn btn-primary btn-block">ABOUT</button></a>
         </p>
     </div>
+</div>
 
     <div class="col-sm-8 text-left">
         <div class="panel panel-container" style="padding: 30px; box-shadow: 2px 2px 5px #888888;">
