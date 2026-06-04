@@ -42,7 +42,7 @@ include 'header.php';
                     <center>
                         <h1><b>Implementasi Metode K-Nearest Neighbor Untuk Prediksi
                                 Stunting Balita Berdasarkan Data Kesehatan dan Lingkungan
-                                (Studi Kasus: Puskesmas Ngimbang)</b>
+                                (Studi Kasus: Puskesmas Ngimbang) test</b>
                         </h1>
                     </center>
                     <hr>
