@@ -1,9 +1,9 @@
 <?php
 	include "fix_mysql.inc.php";	
-	$host = "localhost";
-	$user = "root";
-	$pass = "";
-	$db = "knnklasifikasi";
+	$host = getenv('DB_HOST') ?: "localhost";
+	$user = getenv('DB_USER') ?: "root";
+	$pass = getenv('DB_PASSWORD') ?: "";
+	$db = getenv('DB_NAME') ?: "knnklasifikasi";
 
 	$conn = mysql_connect($host, $user, $pass) or die("Tidak terkoneksi ke server!");
 	if ($conn) {
