@@ -242,7 +242,7 @@ $q_terbaru = mysql_query("SELECT * FROM tbl_hasil ORDER BY kode_hasil DESC LIMIT
                                 <div class="classification-stat-item">
                                     <div class="stat-dot stat-dot-green"></div>
                                     <div>
-                                        <h5>Layak</h5>
+                                        <h5>Stunting</h5>
                                         <p><?php echo $total_layak; ?> data, <?php echo $persen_layak; ?>%</p>
                                     </div>
                                 </div>
@@ -250,7 +250,7 @@ $q_terbaru = mysql_query("SELECT * FROM tbl_hasil ORDER BY kode_hasil DESC LIMIT
                                 <div class="classification-stat-item">
                                     <div class="stat-dot stat-dot-orange"></div>
                                     <div>
-                                        <h5>Tidak Layak</h5>
+                                        <h5>Tidak Stunting</h5>
                                         <p><?php echo $total_tidak_layak; ?> data, <?php echo $persen_tidak_layak; ?>%
                                         </p>
                                     </div>
