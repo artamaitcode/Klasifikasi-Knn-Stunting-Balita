@@ -274,14 +274,14 @@ $d_kriteria_total = mysql_fetch_array($q_kriteria_total);
                         <label>Keputusan</label>
 
                         <select name="keputusan" class="form-control" required>
-                            <option value="LAYAK"
-                                <?php if(strtoupper($data_training['keputusan']) == "LAYAK"){ echo "selected"; } ?>>
-                                LAYAK
+                            <option value="Stunting"
+                                <?php if(strtoupper($data_training['keputusan']) == "Stunting"){ echo "selected"; } ?>>
+                                Stunting
                             </option>
 
-                            <option value="TIDAK LAYAK"
-                                <?php if(strtoupper($data_training['keputusan']) == "TIDAK LAYAK"){ echo "selected"; } ?>>
-                                TIDAK LAYAK
+                            <option value="Tidak Stunting"
+                                <?php if(strtoupper($data_training['keputusan']) == "Tidak Stunting"){ echo "selected"; } ?>>
+                                Tidak Stunting
                             </option>
                         </select>
                     </div>
