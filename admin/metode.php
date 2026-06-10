@@ -1,419 +1,701 @@
 <?php
 include "header.php";
+
 if (isset($_GET['aksi'])) {
     if ($_GET['aksi'] == "simpanhasil") {
-        $kode_hasil = $_POST['kode_hasil'];
-        $nama = $_POST['nama'];
-        $keputusan = $_POST['keputusan'];
-        mysql_query("insert into tbl_hasil(kode_hasil,nama,keputusan) values('$kode_hasil','$nama','$keputusan')");
+        $kode_hasil = mysql_real_escape_string($_POST['kode_hasil']);
+        $nama = mysql_real_escape_string($_POST['nama']);
+        $keputusan = mysql_real_escape_string($_POST['keputusan']);
+
+        mysql_query("INSERT INTO tbl_hasil(kode_hasil,nama,keputusan) 
+            VALUES('$kode_hasil','$nama','$keputusan')") or die(mysql_error());
+
         header("location:hasil.php");
+        exit;
     }
+}
+
+$kode_nama_get = "";
+if(isset($_GET['kode_nama'])){
+    $kode_nama_get = mysql_real_escape_string($_GET['kode_nama']);
+}
+
+$nilai_k = 3;
+if(isset($_GET['nilai_k'])){
+    $nilai_k = (int)$_GET['nilai_k'];
+    if($nilai_k < 1){
+        $nilai_k = 3;
+    }
+}
+
+$is_proses = false;
+if(isset($_GET['proses']) && $kode_nama_get != ""){
+    $is_proses = true;
+}
+
+$kriteria_list = array();
+$q_kriteria = mysql_query("SELECT * FROM tbl_kriteria ORDER BY kode_kriteria ASC");
+while($k = mysql_fetch_array($q_kriteria)){
+    $kriteria_list[] = $k;
+}
+
+$total_training_q = mysql_query("SELECT COUNT(*) AS total FROM tbl_namatraining");
+$total_training = mysql_fetch_array($total_training_q);
+
+$total_testing_q = mysql_query("SELECT COUNT(DISTINCT kode_nama) AS total FROM tbl_testing");
+$total_testing = mysql_fetch_array($total_testing_q);
+
+$total_kriteria_q = mysql_query("SELECT COUNT(*) AS total FROM tbl_kriteria");
+$total_kriteria = mysql_fetch_array($total_kriteria_q);
+
+$selected_testing = false;
+if($kode_nama_get != ""){
+    $q_selected = mysql_query("SELECT * FROM tbl_testing WHERE kode_nama='$kode_nama_get' LIMIT 1");
+    $selected_testing = mysql_fetch_array($q_selected);
 }
 ?>
 
-<div class="container-fluid text-center">
-    <div class="row content">
-        <div class="col-sm-2 sidenav">
-            <p><a href="index.php"><button type="button" class="btn btn-primary btn-block">BERANDA</button></a>
+<div class="container-fluid">
+    <div class="row">
+
+        <div class="col-sm-2 modern-sidebar">
+            <div class="modern-brand">KNN Stunting</div>
+
+            <p>
+                <a href="index.php">
+                    <button type="button" class="btn btn-primary btn-block">
+                        <span class="glyphicon glyphicon-home"></span> BERANDA
+                    </button>
+                </a>
             </p>
-            <p><a href="training.php"><button type="button" class="btn btn-primary btn-block">DATA
-                        TRAINING</button></a>
+
+            <p>
+                <a href="training.php">
+                    <button type="button" class="btn btn-primary btn-block">
+                        <span class="glyphicon glyphicon-list-alt"></span> DATA TRAINING
+                    </button>
+                </a>
             </p>
-            <p><a href="testing.php"><button type="button" class="btn btn-primary btn-block">DATA TESTING</button></a>
+
+            <p>
+                <a href="testing.php">
+                    <button type="button" class="btn btn-primary btn-block">
+                        <span class="glyphicon glyphicon-check"></span> DATA TESTING
+                    </button>
+                </a>
             </p>
-            <p><a href="metode.php"><button type="button" class="btn btn-primary btn-block active">METODE</button></a>
+
+            <p>
+                <a href="kriteria.php">
+                    <button type="button" class="btn btn-primary btn-block">
+                        <span class="glyphicon glyphicon-th-large"></span> DATA KRITERIA
+                    </button>
+                </a>
             </p>
-            <p><a href="hasil.php"><button type="button" class="btn btn-primary btn-block">HASIL ANALISA</button></a>
-            <p><a href="about.php"><button type="button" class="btn btn-primary btn-block">ABOUT</button></a>
+
+            <p>
+                <a href="subkriteria.php">
+                    <button type="button" class="btn btn-primary btn-block">
+                        <span class="glyphicon glyphicon-th-list"></span> DATA SUB KRITERIA
+                    </button>
+                </a>
+            </p>
+
+            <p>
+                <a href="metode.php">
+                    <button type="button" class="btn btn-primary btn-block active">
+                        <span class="glyphicon glyphicon-cog"></span> METODE
+                    </button>
+                </a>
+            </p>
+
+            <p>
+                <a href="hasil.php">
+                    <button type="button" class="btn btn-primary btn-block">
+                        <span class="glyphicon glyphicon-stats"></span> HASIL ANALISA
+                    </button>
+                </a>
+            </p>
+
+            <p>
+                <a href="about.php">
+                    <button type="button" class="btn btn-primary btn-block">
+                        <span class="glyphicon glyphicon-info-sign"></span> ABOUT
+                    </button>
+                </a>
             </p>
         </div>
 
-        <div class="col-sm-8 text-left">
-            <div class="panel panel-container" style="padding: 30px; box-shadow: 2px 2px 5px #888888;">
-                <div class="bootstrap-table">
-                    <h4> <b>Klasifikasi Metode K-Nearest Neighbor Untuk Prediksi Stunting Balita </b></h4>
+        <div class="col-sm-10 modern-content">
+
+            <div class="metode-page-header">
+                <div>
+                    <span class="home-badge">
+                        <span class="glyphicon glyphicon-cog"></span>
+                        Proses Klasifikasi
+                    </span>
+
+                    <h2>Metode K-Nearest Neighbor</h2>
+
+                    <p>
+                        Jalankan proses klasifikasi data testing berdasarkan kedekatan nilai terhadap data training
+                        menggunakan perhitungan Euclidean Distance.
+                    </p>
                 </div>
 
-                <div class="row">
-                </div>
-                <div class="bootstrap-table">
-                    <!-- modal input -->
-                    <div class="modal-header">
+                <a href="hasil.php" class="btn btn-modern-primary">
+                    <span class="glyphicon glyphicon-stats"></span> Lihat Hasil
+                </a>
+            </div>
 
+            <div class="row dashboard-summary">
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="summary-card">
+                        <div class="summary-icon summary-blue">
+                            <span class="glyphicon glyphicon-list-alt"></span>
+                        </div>
+                        <div class="summary-info">
+                            <h3><?php echo $total_training['total']; ?></h3>
+                            <p>Data Training</p>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <form action="" method="get" enctype="multipart/form-data">
-                            <div class="form-group">
-                                <label>Pilih Nama</label>
-                                <select class='form-control' name='kode_nama' autocomplete='off'>
-                                    <option disabled selected>Pilih</option>";
-                                    <?php
-                                $b1 = mysql_query("SELECT * from tbl_testing group by kode_nama order by kode_nama asc");
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="summary-card">
+                        <div class="summary-icon summary-green">
+                            <span class="glyphicon glyphicon-check"></span>
+                        </div>
+                        <div class="summary-info">
+                            <h3><?php echo $total_testing['total']; ?></h3>
+                            <p>Data Testing</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <div class="summary-card">
+                        <div class="summary-icon summary-orange">
+                            <span class="glyphicon glyphicon-th-large"></span>
+                        </div>
+                        <div class="summary-info">
+                            <h3><?php echo $total_kriteria['total']; ?></h3>
+                            <p>Total Kriteria</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modern-card metode-form-card">
+                <div class="modern-title-wrap">
+                    <div>
+                        <h4>Pengujian Data Testing</h4>
+                        <div class="modern-subtitle">
+                            Pilih data testing dan tentukan nilai K untuk memulai proses klasifikasi.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metode-info-box">
+                    <span class="glyphicon glyphicon-info-sign"></span>
+                    Nilai K menentukan jumlah tetangga terdekat yang digunakan untuk mengambil keputusan akhir.
+                </div>
+
+                <form action="" method="get" enctype="multipart/form-data">
+                    <div class="metode-form-grid">
+
+                        <div class="form-group">
+                            <label>Pilih Nama Testing</label>
+                            <select class="form-control" name="kode_nama" autocomplete="off" required>
+                                <option value="">Pilih Data Testing</option>
+
+                                <?php
+                                $b1 = mysql_query("SELECT * FROM tbl_testing GROUP BY kode_nama ORDER BY kode_nama ASC");
                                 while ($b = mysql_fetch_array($b1)) {
+                                    $selected = "";
+                                    if($kode_nama_get == $b['kode_nama']){
+                                        $selected = "selected";
+                                    }
                                 ?>
 
-                                    <option value="<?php echo $b['kode_nama'] ?>">
-                                        <?php echo $b['kode_nama'] ?> -
-                                        <?php echo $b['nama'] ?></option>
+                                <option value="<?php echo $b['kode_nama']; ?>" <?php echo $selected; ?>>
+                                    <?php echo $b['kode_nama']; ?> - <?php echo $b['nama']; ?>
+                                </option>
 
-                                    <?php
+                                <?php } ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nilai K</label>
+                            <input name="nilai_k" type="number" class="form-control" value="<?php echo $nilai_k; ?>"
+                                min="1" required>
+                        </div>
+
+                    </div>
+
+                    <div class="metode-form-action">
+                        <button type="submit" class="btn btn-modern-primary" name="proses" value="PENGUJIAN">
+                            <span class="glyphicon glyphicon-play"></span> Proses Pengujian
+                        </button>
+
+                        <?php if($is_proses){ ?>
+                        <a href="metode.php" class="btn btn-modern-secondary">
+                            <span class="glyphicon glyphicon-refresh"></span> Reset
+                        </a>
+                        <?php } ?>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modern-card">
+                <div class="metode-section-title">
+                    <div>
+                        <h4>Data Training</h4>
+                        <p>Dataset acuan yang digunakan untuk menghitung jarak terhadap data testing.</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive modern-table metode-table-wrap">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="text-center">No</th>
+                                <th>Nama</th>
+
+                                <?php
+                                foreach($kriteria_list as $kriteria){
+                                    echo "<th class='text-center'>".$kriteria['nama_kriteria']."</th>";
                                 }
                                 ?>
-                                </select>
-                            </div>
-                            <label>Nilai K</label>
-                            <input name="nilai_k" type="" class="form-control" value="3">
 
-                            <div class="modal-footer">
-                                <input type="submit" class="btn btn-danger" name="proses" value=" PENGUJIAN">
-                            </div>
-                        </form>
-                    </div>
+                                <th class="text-center">Keputusan</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <?php
+                            $data_training = mysql_query("SELECT * FROM tbl_namatraining ORDER BY kode_nama ASC");
+                            $no = 1;
+
+                            if(mysql_num_rows($data_training) > 0){
+                                while ($a = mysql_fetch_array($data_training)) {
+                                    $kode = $a['kode_nama'];
+                            ?>
+
+                            <tr>
+                                <td class="text-center"><?php echo $no++; ?></td>
+
+                                <td>
+                                    <div class="training-user">
+                                        <div class="training-avatar">
+                                            <?php echo strtoupper(substr($a['nama'], 0, 1)); ?>
+                                        </div>
+                                        <div>
+                                            <strong><?php echo $a['nama']; ?></strong>
+                                            <small>Kode: <?php echo $a['kode_nama']; ?></small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <?php
+                                foreach($kriteria_list as $kriteria){
+                                    $kode_kriteria = $kriteria['kode_kriteria'];
+
+                                    $q_nilai = mysql_query("SELECT nilai_training AS nilai 
+                                        FROM tbl_training 
+                                        WHERE kode_nama='$kode' 
+                                        AND kode_kriteria='$kode_kriteria' 
+                                        LIMIT 1");
+
+                                    $d_nilai = mysql_fetch_array($q_nilai);
+
+                                    if($d_nilai){
+                                        echo "<td class='text-center'><span class='badge-nilai'>".$d_nilai['nilai']."</span></td>";
+                                    } else {
+                                        echo "<td class='text-center'><span class='badge-empty'>-</span></td>";
+                                    }
+                                }
+                                ?>
+
+                                <td class="text-center">
+                                    <span class="badge-decision"><?php echo $a['keputusan']; ?></span>
+                                </td>
+                            </tr>
+
+                            <?php 
+                                }
+                            } else {
+                            ?>
+
+                            <tr>
+                                <td colspan="<?php echo count($kriteria_list) + 3; ?>" class="text-center empty-state">
+                                    <span class="glyphicon glyphicon-folder-open"></span>
+                                    <h4>Data training masih kosong</h4>
+                                    <p>Silakan isi data training terlebih dahulu.</p>
+                                </td>
+                            </tr>
+
+                            <?php } ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
+            <div class="modern-card">
+                <div class="metode-section-title">
+                    <div>
+                        <h4>Data Testing Yang Dipilih</h4>
+                        <p>Data ini akan dibandingkan dengan seluruh data training.</p>
+                    </div>
+                </div>
 
-            <div class="panel panel-container" style="padding: 50px; box-shadow: 2px 2px 5px #888888;">
-                <div class="bootstrap-table">
-                    <!-- modal dataset training -->
-                    <h4>Data Training</h4>
-                    <div class="table-responsive">
-                        <table class="table table-bordered thead-dark" id="table">
-                            <thead class="thead-dark">
-                                <tr style="box-shadow: 2px 2px 4px #888888;">
-                                    <th class="text-center">No</th>
-                                    <th class="text-center">Nama </th>
+                <div class="table-responsive modern-table metode-table-wrap">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="text-center">No</th>
+                                <th>Nama</th>
 
-                                    <?php
-                                // untuk menampilkan data kriteria
-                                $data = mysql_query("SELECT * FROM tbl_kriteria order by kode_kriteria asc");
-                                while ($a = mysql_fetch_array($data)) {
-
-                                    echo "<th class='text-center'>$a[nama_kriteria]</th>";
+                                <?php
+                                foreach($kriteria_list as $kriteria){
+                                    echo "<th class='text-center'>".$kriteria['nama_kriteria']."</th>";
                                 }
                                 ?>
 
-                                    <th class="text-center">Keputusan</th>
-                                </tr>
-                            </thead>
+                                <th class="text-center">Keputusan</th>
+                            </tr>
+                        </thead>
 
+                        <tbody>
+                            <?php if($is_proses && $selected_testing){ ?>
 
-                            <tbody>
+                            <tr>
+                                <td class="text-center">1</td>
+
+                                <td>
+                                    <div class="training-user">
+                                        <div class="training-avatar">
+                                            <?php echo strtoupper(substr($selected_testing['nama'], 0, 1)); ?>
+                                        </div>
+                                        <div>
+                                            <strong><?php echo $selected_testing['nama']; ?></strong>
+                                            <small>Kode: <?php echo $selected_testing['kode_nama']; ?></small>
+                                        </div>
+                                    </div>
+                                </td>
+
                                 <?php
-                            //untuk menampilkan data mekanik
-                            $data = mysql_query("SELECT * FROM tbl_namatraining order by kode_nama asc");
-                            $no = 1;
-                            while ($a = mysql_fetch_array($data)) {
-                                $nomor = $no++;
-                                $kode = $a['kode_nama'];
-                                $nama = $a['nama'];
-                                echo "<tr>
-								<td class='text-center'>$nomor</td>";
+                                foreach($kriteria_list as $kriteria){
+                                    $kode_kriteria = $kriteria['kode_kriteria'];
 
-                                echo "<td>$nama</td>";
-                                //untuk menampilkan nilai sub berdasarkan kriteria
-                                $query1 = mysql_query("SELECT nilai_training as sub FROM tbl_training WHERE kode_nama='" . $kode . "' ORDER BY kode_kriteria ");
-                                while ($result1 = mysql_fetch_array($query1)) {
-                                    echo "<td class='text-center'>$result1[sub]</td>";
-                                } ?>
+                                    $q_nilai = mysql_query("SELECT nilai_testing AS nilai 
+                                        FROM tbl_testing 
+                                        WHERE kode_nama='$kode_nama_get' 
+                                        AND kode_kriteria='$kode_kriteria' 
+                                        LIMIT 1");
 
-                                <td class="text-center"><?php echo $a['keputusan'] ?></td>
+                                    $d_nilai = mysql_fetch_array($q_nilai);
 
-                                </tr>
-                            </tbody>
+                                    if($d_nilai){
+                                        echo "<td class='text-center'><span class='badge-nilai'>".$d_nilai['nilai']."</span></td>";
+                                    } else {
+                                        echo "<td class='text-center'><span class='badge-empty'>-</span></td>";
+                                    }
+                                }
+                                ?>
+
+                                <td class="text-center">
+                                    <span class="badge-keputusan">?</span>
+                                </td>
+                            </tr>
+
+                            <?php } else { ?>
+
+                            <tr>
+                                <td colspan="<?php echo count($kriteria_list) + 3; ?>" class="text-center empty-state">
+                                    <span class="glyphicon glyphicon-search"></span>
+                                    <h4>Belum ada data testing dipilih</h4>
+                                    <p>Pilih data testing dan klik Proses Pengujian untuk menampilkan data.</p>
+                                </td>
+                            </tr>
+
                             <?php } ?>
-                        </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <?php if($is_proses && $selected_testing){ ?>
+
+            <div class="modern-card">
+                <div class="metode-section-title">
+                    <div>
+                        <h4>Euclidean Distance</h4>
+                        <p>Perhitungan jarak antara data testing dengan masing-masing data training.</p>
                     </div>
-                    <br>
+                </div>
 
+                <div class="table-responsive modern-table metode-table-wrap">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="text-center">No</th>
+                                <th>Nama</th>
 
-                    <!-- modal dataset testing -->
-                    <h4>Data Testing</h4>
-                    <div class="table-responsive">
-                        <table class="table table-bordered thead-dark" id="table">
-                            <thead class="thead-dark">
-                                <tr style="box-shadow: 2px 2px 4px #888888;">
-                                    <th class="text-center">No</th>
-                                    <th class="text-center">Nama </th>
-
-                                    <?php
-                                // untuk menampilkan data kriteria
-                                $data = mysql_query("SELECT * FROM tbl_kriteria order by kode_kriteria asc");
-                                while ($a = mysql_fetch_array($data)) {
-
-                                    echo "<th class='text-center'>$a[nama_kriteria]</th>";
+                                <?php
+                                foreach($kriteria_list as $kriteria){
+                                    echo "<th class='text-center'>".$kriteria['nama_kriteria']."</th>";
                                 }
                                 ?>
 
-                                    <th class="text-center">Keputusan</th>
-                                </tr>
-                            </thead>
+                                <th class="text-center">Distance</th>
+                            </tr>
+                        </thead>
 
+                        <tbody>
                             <?php
-                        //cek data mekanik
-                        $data = mysql_query("SELECT * FROM tbl_testing where kode_nama='$_GET[kode_nama]' limit 1");
-                        while ($a = mysql_fetch_array($data)) {
-
-                            if (empty($a['kode_nama'])) {
-                            } else {
-                            }
-                        ?>
-
-                            <tbody>
-
-                                <?php
-                                //untuk menampilkan data mekanik
-                                $data = mysql_query("SELECT * FROM tbl_testing where kode_nama='$_GET[kode_nama]' limit 1");
-                                $no = 1;
-                                while ($a = mysql_fetch_array($data)) {
-                                    $nomor = $no++;
-                                    $kode = $a['kode_nama'];
-                                    $nama = $a['nama'];
-                                    echo "<tr>
-								<td class='text-center'>$nomor</td>";
-
-                                    echo "<td class='text-center'>$nama</td>";
-                                    //untuk menampilkan nilai sub berdasarkan kriteria
-                                    $query1 = mysql_query("SELECT nilai_testing as sub FROM tbl_testing WHERE kode_nama='" . $kode . "' ORDER BY kode_kriteria ");
-                                    while ($result1 = mysql_fetch_array($query1)) {
-                                        echo "<td class='text-center'>$result1[sub]</td>";
-                                    } ?>
-
-                                <td class="text-center">?</td>
-                                </tr>
-                            </tbody>
-                            <?php }
-                            } ?>
-
-                        </table>
-                    </div>
-                    <br>
-
-
-
-                    <!-- modal euclidean distance -->
-                    <h4>Euclidean Distance</h4>
-                    <div class="table-responsive">
-                        <table class="table table-bordered thead-dark" id="table">
-                            <thead class="thead-dark">
-                                <tr style="box-shadow: 2px 2px 4px #888888;">
-                                    <th class="text-center">No</th>
-                                    <th class="text-center">Nama</th>
-
-                                    <?php
-                                // untuk menampilkan data kriteria
-                                $data = mysql_query("SELECT * FROM tbl_kriteria order by kode_kriteria asc");
-                                while ($a = mysql_fetch_array($data)) {
-
-                                    echo "<th class='text-center'>$a[nama_kriteria]</th>";
-                                }
-                                ?>
-
-                                    <th class="text-center">Distance</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                            //untuk menampilkan data mekanik
-                            $data = mysql_query("SELECT * FROM tbl_namatraining  order by kode_nama");
+                            $data = mysql_query("SELECT * FROM tbl_namatraining ORDER BY kode_nama ASC");
                             $no = 1;
-                            $jumlah = 0;
+
                             while ($a = mysql_fetch_array($data)) {
                                 $sum = 0.0;
-                                $nomor = $no++;
                                 $kode = $a['kode_nama'];
-                                $nama = $a['nama'];
-                                echo "<tr>
-							<td class='text-center'>$nomor</td>";
-
-                                echo "<td>$nama</td>";
-                                //untuk menampilkan nilai sub berdasarkan kriteria
-                                $query2 = mysql_query("SELECT kp.nilai_training as subtraining, kp.kode_kriteria as kode_kriteria FROM  tbl_training kp, tbl_kriteria k
-								WHERE kp.kode_nama='" . $kode . "' AND k.kode_kriteria=kp.kode_kriteria ORDER BY kp.kode_kriteria");
-                                while ($result2 = mysql_fetch_array($query2)) {
-                                    $val1 = $result2['subtraining'];
-
-                                    $query3 = mysql_query("SELECT nilai_testing as subtesting FROM tbl_testing where kode_kriteria='$result2[kode_kriteria]' and kode_nama='$_GET[kode_nama]'");
-                                    $result3 = mysql_fetch_assoc($query3);
-                                    $val2 = $result3['subtesting'];
-
-                                    $dua = 2;
-                                    $val = pow(($val2 - $val1), $dua);
-                                    $sum += ($val);
-                                    $akr = sqrt($sum);
-                                    $akar = number_format($akr, 2);
-                                    echo "<td class='text-center'>$val</td>";
-                                }
-                                echo "<td class='text-center'>$akar</td>";
-                                echo "</tr>";
-                                $jumlah++;
-                                //ambil nilai distance
-                                mysql_query("update tbl_namatraining set distance='$akr' where kode_nama='$a[kode_nama]'");
-                            }
                             ?>
-                        </table>
+
+                            <tr>
+                                <td class="text-center"><?php echo $no++; ?></td>
+
+                                <td>
+                                    <div class="training-user">
+                                        <div class="training-avatar">
+                                            <?php echo strtoupper(substr($a['nama'], 0, 1)); ?>
+                                        </div>
+                                        <div>
+                                            <strong><?php echo $a['nama']; ?></strong>
+                                            <small>Kode: <?php echo $a['kode_nama']; ?></small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <?php
+                                foreach($kriteria_list as $kriteria){
+                                    $kode_kriteria = $kriteria['kode_kriteria'];
+
+                                    $q_training = mysql_query("SELECT nilai_training AS nilai 
+                                        FROM tbl_training 
+                                        WHERE kode_nama='$kode' 
+                                        AND kode_kriteria='$kode_kriteria' 
+                                        LIMIT 1");
+
+                                    $d_training = mysql_fetch_array($q_training);
+
+                                    $q_testing = mysql_query("SELECT nilai_testing AS nilai 
+                                        FROM tbl_testing 
+                                        WHERE kode_nama='$kode_nama_get' 
+                                        AND kode_kriteria='$kode_kriteria' 
+                                        LIMIT 1");
+
+                                    $d_testing = mysql_fetch_array($q_testing);
+
+                                    $val1 = 0;
+                                    $val2 = 0;
+
+                                    if($d_training){
+                                        $val1 = $d_training['nilai'];
+                                    }
+
+                                    if($d_testing){
+                                        $val2 = $d_testing['nilai'];
+                                    }
+
+                                    $val = pow(($val2 - $val1), 2);
+                                    $sum += $val;
+
+                                    echo "<td class='text-center'><span class='badge-distance-detail'>".$val."</span></td>";
+                                }
+
+                                $akr = sqrt($sum);
+                                mysql_query("UPDATE tbl_namatraining SET distance='$akr' WHERE kode_nama='".$a['kode_nama']."'");
+                                ?>
+
+                                <td class="text-center">
+                                    <span class="badge-distance"><?php echo number_format($akr, 3); ?></span>
+                                </td>
+                            </tr>
+
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <?php
+            $brg = mysql_query("SELECT * FROM tbl_namatraining ORDER BY distance ASC");
+            $rank = 1;
+
+            while ($b = mysql_fetch_array($brg)) {
+                mysql_query("UPDATE tbl_namatraining SET ranking='$rank' WHERE kode_nama='".$b['kode_nama']."'");
+                $rank++;
+            }
+
+            $bg = mysql_query("SELECT * FROM tbl_namatraining ORDER BY distance ASC");
+
+            while ($bt = mysql_fetch_array($bg)) {
+                if ($bt['ranking'] <= $nilai_k) {
+                    mysql_query("UPDATE tbl_namatraining SET pilihan='Ya' WHERE kode_nama='".$bt['kode_nama']."'");
+                } else {
+                    mysql_query("UPDATE tbl_namatraining SET pilihan='Tidak' WHERE kode_nama='".$bt['kode_nama']."'");
+                }
+            }
+            ?>
+
+            <div class="modern-card">
+                <div class="metode-section-title">
+                    <div>
+                        <h4>Klasifikasi Nearest Neighbor</h4>
+                        <p>Data dengan ranking teratas akan dipakai sebagai dasar pengambilan keputusan.</p>
                     </div>
-                    <br>
+                </div>
 
-
-
-                    <!-- modal rangking -->
-                    <?php
-                $brg = mysql_query("SELECT * FROM tbl_namatraining order by distance asc");
-                $rank = 1;
-                while ($b = mysql_fetch_array($brg)) {
-
-                    $kode_nama = $b['kode_nama'];
-                ?>
-
-                    <?php
-                    $ubah = mysql_query("Update tbl_namatraining set ranking='$rank' where kode_nama='$b[kode_nama]'");
-                    $rank++;
-                    ?>
-                    <?php
-                }
-                ?>
-
-
-                    <!-- modal pengelompokan -->
-                    <?php
-                $bg = mysql_query("SELECT * FROM tbl_namatraining order by distance asc");
-                while ($bt = mysql_fetch_array($bg)) {
-                    $kode_nama = $bt['kode_nama'];
-                    $nilai_k = $_GET['nilai_k'];
-                ?>
-
-                    <?php
-                    if ($bt['ranking'] <= $nilai_k) {
-                        $ubah = mysql_query("Update tbl_namatraining set pilihan='Ya' where kode_nama='$bt[kode_nama]'");
-                        # code...
-                    } else {
-                        $ubah = mysql_query("Update tbl_namatraining set pilihan='Tidak' where kode_nama='$bt[kode_nama]'");
-                    }
-                    ?>
-                    <?php
-                }
-                ?>
-
-
-
-                    <!-- modal nearest neighbhor -->
-                    <h4>Klasifikasi Nearest Neighbhor</h4>
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
-                            <tr style="box-shadow: 2px 2px 4px #888888;">
+                <div class="table-responsive modern-table metode-table-wrap">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
                                 <th class="text-center">Kode</th>
-                                <th class="text-center">Nama</th>
-                                <th class="text-center">Dinstance</th>
-                                <th class="text-center">Rangking</th>
+                                <th>Nama</th>
+                                <th class="text-center">Distance</th>
+                                <th class="text-center">Ranking</th>
                                 <th class="text-center">Pilih</th>
                                 <th class="text-center">Keputusan</th>
                             </tr>
+                        </thead>
+
+                        <tbody>
                             <?php
+                            $brg = mysql_query("SELECT * FROM tbl_namatraining ORDER BY distance ASC");
 
-                        $brg = mysql_query("SELECT * FROM tbl_namatraining order by distance asc");
-                        while ($b = mysql_fetch_array($brg)) {
+                            while ($b = mysql_fetch_array($brg)) {
+                                $row_class = "";
+                                if($b['pilihan'] == "Ya"){
+                                    $row_class = "nearest-selected";
+                                }
+                            ?>
 
+                            <tr class="<?php echo $row_class; ?>">
+                                <td class="text-center">
+                                    <span class="badge-kode"><?php echo $b['kode_nama']; ?></span>
+                                </td>
 
-                        ?>
-                            <tr>
-                                <td class="text-center"><?php echo $b['kode_nama'] ?></td>
-                                <td><?php echo $b['nama'] ?></td>
-                                <td class="text-center"><?php echo number_format($b['distance'], 3) ?></td>
-                                <td class="text-center"><?php echo $b['ranking'] ?></td>
-                                <td class="text-center"><?php echo $b['pilihan'] ?></td>
-                                <td class="text-center"><?php echo $b['keputusan'] ?></td>
+                                <td>
+                                    <strong><?php echo $b['nama']; ?></strong>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge-distance"><?php echo number_format($b['distance'], 3); ?></span>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge-rank">#<?php echo $b['ranking']; ?></span>
+                                </td>
+
+                                <td class="text-center">
+                                    <?php if($b['pilihan'] == "Ya"){ ?>
+                                    <span class="badge-pilih-yes">Ya</span>
+                                    <?php } else { ?>
+                                    <span class="badge-pilih-no">Tidak</span>
+                                    <?php } ?>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge-decision"><?php echo $b['keputusan']; ?></span>
+                                </td>
                             </tr>
 
-                            <?php
-                        }
-                        ?>
-                        </table>
-                    </div>
-                    <br>
-
-
-
-                    <!-- modal kesimpulan -->
-                    <?php
-                $warga = mysql_query("SELECT * FROM tbl_namatraining order by kode_nama asc");
-                while ($ba = mysql_fetch_array($warga)) {
-                ?>
-
-                    <?php
-                    $bg = mysql_query("SELECT count(*) as jumlahditerima  FROM tbl_namatraining where pilihan='Ya' and keputusan='LAYAK'");
-                    $a = mysql_fetch_array($bg);
-
-                    $bg1 = mysql_query("SELECT count(*) as jumlahtidakditerima  FROM tbl_namatraining where pilihan='Ya' and keputusan='TIDAK LAYAK'");
-                    $a1 = mysql_fetch_array($bg1);
-                    ?>
-
-
-
-                    <?php
-                    $jumlahditerima = $a['jumlahditerima'];
-                    $jumlahtidakditerima = $a1['jumlahtidakditerima'];
-                    if ($a['jumlahditerima'] > $a1['jumlahtidakditerima']) {
-
-                        $hasil = 'Layak';
-                        $hasill = 'kategori Layak lebih banyak daripada Tidak Layak';
-                    } else {
-                        $hasil = 'Tidak Layak';
-                        $hasill = 'kategori Tidak Layak lebih banyak daripada Layak';
-                    }
-                }
-
-                $data = mysql_query("SELECT * FROM tbl_testing where kode_nama='$_GET[kode_nama]'");
-                $a = mysql_fetch_array($data);
-                ?>
-
-                    <h4>Kesimpulan :</h4>
-                    <div class="text-justify" style="padding: 20px; box-shadow: 2px 2px 5px #888888;">
-                        <h4>Hasil perhitungan ini mengambil <b><?php echo $_GET['nilai_k'] ?></b> data terbaik
-                            asecending
-                            <b>(K=<?php echo $_GET['nilai_k'] ?>)</b> yang menggunakan <b>Klasifikasi Nearest
-                                Neighbhor(K-NN)</b>, adapun kesimpulan dari Klasifikasi Nearest Neighbhor(K-NN)
-                            adalah :
-                            <b><?php echo $hasill ?></b>, Layak berjumlah <b>(<?php echo $jumlahditerima ?>)</b>
-                            sedangkan
-                            Tidak Layak berjumlah <b>(<?php echo $jumlahtidakditerima ?>)</b>, sehingga dapat
-                            disimpulkan
-                            calon penerima bantuan pangan bernama <b><?php echo $a['nama'] ?></b>. Keputusan kelayakan
-                            penerima bantuan pangan hasilnya : <b>(<?php echo $hasil ?>)</b>
-                        </h4>
-
-                    </div>
-
-
-
-                    <!-- modal input data baru -->
-                    <?php
-                $carikode = mysql_query("select max(kode_hasil) from tbl_hasil") or die(mysql_error());
-                $datakode = mysql_fetch_array($carikode);
-                if ($datakode) {
-                    $nilaikode = substr($datakode[0], 1);
-                    $kode = (int) $nilaikode;
-                    $kode = $kode + 1;
-                    $kode_otomatis = "H" . str_pad($kode, 2, "0", STR_PAD_LEFT);
-                } else {
-                    $kode_otomatis = "H01";
-                }
-                ?>
-
-                    <form action="metode.php?aksi=simpanhasil" method="post" enctype="multipart/form-data">
-
-                        <input type="hidden" class="form-control" name="kode_hasil"
-                            value="<?php echo $kode_otomatis ?>">
-
-                        <input name="nama" type="hidden" class="form-control" value="<?php echo $a['nama'] ?>">
-
-                        <input type="hidden" class="form-control" name="keputusan" value="<?php echo $hasil ?>">
-
-                        <div class="modal-footer">
-                            <input type="submit" class="btn btn-danger" name="proses" value="SIMPAN HASIL ANALISA">
-                        </div>
-                    </form>
-
+                            <?php } ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+
+            <?php
+            $q_hasil = mysql_query("SELECT keputusan, COUNT(*) AS total 
+                FROM tbl_namatraining 
+                WHERE pilihan='Ya' 
+                GROUP BY keputusan 
+                ORDER BY total DESC 
+                LIMIT 1");
+
+            $d_hasil = mysql_fetch_array($q_hasil);
+
+            $hasil = "-";
+            $jumlah_hasil = 0;
+
+            if($d_hasil){
+                $hasil = $d_hasil['keputusan'];
+                $jumlah_hasil = $d_hasil['total'];
+            }
+
+            $total_dipilih_q = mysql_query("SELECT COUNT(*) AS total FROM tbl_namatraining WHERE pilihan='Ya'");
+            $total_dipilih = mysql_fetch_array($total_dipilih_q);
+
+            $nama_testing = $selected_testing['nama'];
+
+            $carikode = mysql_query("SELECT MAX(CAST(SUBSTRING(kode_hasil, 2) AS UNSIGNED)) AS max_kode FROM tbl_hasil") or die(mysql_error());
+            $datakode = mysql_fetch_assoc($carikode);
+
+            if ($datakode && $datakode['max_kode'] !== null) {
+                $nilaikode = (int)$datakode['max_kode'];
+                $nilaikode++;
+                $kode_otomatis = "H" . str_pad($nilaikode, 2, "0", STR_PAD_LEFT);
+            } else {
+                $kode_otomatis = "H01";
+            }
+            ?>
+
+            <div class="result-modern-card">
+                <div class="result-icon">
+                    <span class="glyphicon glyphicon-ok"></span>
+                </div>
+
+                <div class="result-content">
+                    <span class="home-badge">
+                        <span class="glyphicon glyphicon-flag"></span>
+                        Kesimpulan
+                    </span>
+
+                    <h3>Hasil Klasifikasi: <?php echo $hasil; ?></h3>
+
+                    <p>
+                        Hasil perhitungan menggunakan <b>K=<?php echo $nilai_k; ?></b> data terdekat menunjukkan bahwa
+                        kategori terbanyak adalah
+                        <b><?php echo $hasil; ?></b> sebanyak <b><?php echo $jumlah_hasil; ?></b> dari
+                        <b><?php echo $total_dipilih['total']; ?></b> data yang dipilih.
+                    </p>
+
+                    <p>
+                        Berdasarkan proses K-Nearest Neighbor, data testing bernama
+                        <b><?php echo $nama_testing; ?></b> mendapatkan keputusan akhir:
+                        <b><?php echo $hasil; ?></b>.
+                    </p>
+
+                    <form action="metode.php?aksi=simpanhasil" method="post" enctype="multipart/form-data">
+                        <input type="hidden" class="form-control" name="kode_hasil"
+                            value="<?php echo $kode_otomatis; ?>">
+                        <input name="nama" type="hidden" class="form-control" value="<?php echo $nama_testing; ?>">
+                        <input type="hidden" class="form-control" name="keputusan" value="<?php echo $hasil; ?>">
+
+                        <button type="submit" class="btn btn-modern-primary" name="proses" value="SIMPAN HASIL ANALISA">
+                            <span class="glyphicon glyphicon-floppy-disk"></span> Simpan Hasil Analisa
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <?php } ?>
+
         </div>
+    </div>
+</div>

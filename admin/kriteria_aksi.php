@@ -1,31 +1,26 @@
-<?php
-include 'header.php';
+<?php 
+include "header.php";
 
-if(!isset($_GET['kode_nama'])){
-    header("location:training.php");
+if(!isset($_GET['kode_kriteria'])){
+    header("location:kriteria.php");
     exit;
 }
 
-if(!isset($_GET['aksi']) || $_GET['aksi'] != "ubah"){
-    header("location:training.php");
+$kode_kriteria = mysql_real_escape_string($_GET['kode_kriteria']);
+
+$query = mysql_query("SELECT * FROM tbl_kriteria WHERE kode_kriteria='$kode_kriteria'") or die(mysql_error());
+$data = mysql_fetch_array($query);
+
+if(!$data){
+    header("location:kriteria.php");
     exit;
 }
 
-$kode_nama = mysql_real_escape_string($_GET['kode_nama']);
+$q_subkriteria = mysql_query("SELECT COUNT(*) AS total FROM tbl_subkriteria WHERE kode_kriteria='$kode_kriteria'");
+$d_subkriteria = mysql_fetch_array($q_subkriteria);
 
-$det = mysql_query("SELECT * FROM tbl_namatraining WHERE kode_nama='$kode_nama'") or die(mysql_error());
-$d = mysql_fetch_array($det);
-
-if(!$d){
-    header("location:training.php");
-    exit;
-}
-
-$q_nilai = mysql_query("SELECT COUNT(*) AS total FROM tbl_training WHERE kode_nama='$kode_nama'");
-$d_nilai = mysql_fetch_array($q_nilai);
-
-$q_kriteria = mysql_query("SELECT COUNT(*) AS total FROM tbl_kriteria");
-$d_kriteria = mysql_fetch_array($q_kriteria);
+$q_total_kriteria = mysql_query("SELECT COUNT(*) AS total FROM tbl_kriteria");
+$d_total_kriteria = mysql_fetch_array($q_total_kriteria);
 ?>
 
 <div class="container-fluid">
@@ -44,7 +39,7 @@ $d_kriteria = mysql_fetch_array($q_kriteria);
 
             <p>
                 <a href="training.php">
-                    <button type="button" class="btn btn-primary btn-block active">
+                    <button type="button" class="btn btn-primary btn-block">
                         <span class="glyphicon glyphicon-list-alt"></span> DATA TRAINING
                     </button>
                 </a>
@@ -60,7 +55,7 @@ $d_kriteria = mysql_fetch_array($q_kriteria);
 
             <p>
                 <a href="kriteria.php">
-                    <button type="button" class="btn btn-primary btn-block">
+                    <button type="button" class="btn btn-primary btn-block active">
                         <span class="glyphicon glyphicon-th-large"></span> DATA KRITERIA
                     </button>
                 </a>
@@ -101,22 +96,22 @@ $d_kriteria = mysql_fetch_array($q_kriteria);
 
         <div class="col-sm-10 modern-content">
 
-            <div class="training-edit-page-header">
+            <div class="kriteria-edit-page-header">
                 <div>
                     <span class="home-badge">
                         <span class="glyphicon glyphicon-pencil"></span>
-                        Ubah Data Training
+                        Ubah Data Kriteria
                     </span>
 
-                    <h2>Ubah Data Training</h2>
+                    <h2>Ubah Data Kriteria</h2>
 
                     <p>
-                        Perbarui nama dan alamat data training bernama
-                        <b><?php echo $d['nama']; ?></b>.
+                        Perbarui nama dan keterangan untuk kriteria
+                        <b><?php echo $data['nama_kriteria']; ?></b>.
                     </p>
                 </div>
 
-                <a href="training.php" class="btn btn-modern-secondary">
+                <a href="kriteria.php" class="btn btn-modern-secondary">
                     <span class="glyphicon glyphicon-arrow-left"></span> Kembali
                 </a>
             </div>
@@ -125,25 +120,25 @@ $d_kriteria = mysql_fetch_array($q_kriteria);
 
                 <div class="col-md-4 col-sm-6">
                     <div class="summary-card">
-                        <div class="summary-icon summary-blue">
-                            <span class="glyphicon glyphicon-user"></span>
+                        <div class="summary-icon summary-purple">
+                            <span class="glyphicon glyphicon-th-large"></span>
                         </div>
 
                         <div class="summary-info">
-                            <h3><?php echo $d['kode_nama']; ?></h3>
-                            <p>Kode Training</p>
+                            <h3><?php echo $data['kode_kriteria']; ?></h3>
+                            <p>Kode Kriteria</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-md-4 col-sm-6">
                     <div class="summary-card">
-                        <div class="summary-icon summary-purple">
-                            <span class="glyphicon glyphicon-th-large"></span>
+                        <div class="summary-icon summary-blue">
+                            <span class="glyphicon glyphicon-folder-open"></span>
                         </div>
 
                         <div class="summary-info">
-                            <h3><?php echo $d_kriteria['total']; ?></h3>
+                            <h3><?php echo $d_total_kriteria['total']; ?></h3>
                             <p>Total Kriteria</p>
                         </div>
                     </div>
@@ -152,91 +147,78 @@ $d_kriteria = mysql_fetch_array($q_kriteria);
                 <div class="col-md-4 col-sm-6">
                     <div class="summary-card">
                         <div class="summary-icon summary-green">
-                            <span class="glyphicon glyphicon-ok"></span>
+                            <span class="glyphicon glyphicon-th-list"></span>
                         </div>
 
                         <div class="summary-info">
-                            <h3><?php echo $d_nilai['total']; ?></h3>
-                            <p>Nilai Training</p>
+                            <h3><?php echo $d_subkriteria['total']; ?></h3>
+                            <p>Sub Kriteria Terkait</p>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <div class="modern-card training-edit-card">
+            <div class="modern-card kriteria-edit-card">
 
                 <div class="modern-title-wrap">
                     <div>
-                        <h4>Form Ubah Data Training</h4>
+                        <h4>Form Ubah Kriteria</h4>
                         <div class="modern-subtitle">
-                            Update identitas data training tanpa mengubah nilai kriteria.
+                            Update data kriteria utama yang dipakai dalam proses klasifikasi.
                         </div>
                     </div>
                 </div>
 
-                <div class="training-edit-user-card">
-                    <div class="training-edit-avatar">
-                        <?php echo strtoupper(substr($d['nama'], 0, 1)); ?>
+                <div class="kriteria-edit-user-card">
+                    <div class="kriteria-edit-avatar">
+                        <span class="glyphicon glyphicon-th-large"></span>
                     </div>
 
-                    <div class="training-edit-user-info">
-                        <h4><?php echo $d['nama']; ?></h4>
+                    <div class="kriteria-edit-user-info">
+                        <h4><?php echo $data['nama_kriteria']; ?></h4>
                         <p>
-                            <span class="badge-kode"><?php echo $d['kode_nama']; ?></span>
-                            <span class="training-edit-status"><?php echo $d['alamat']; ?></span>
+                            <span class="badge-kode"><?php echo $data['kode_kriteria']; ?></span>
+                            <span class="kriteria-edit-status">
+                                <?php echo $d_subkriteria['total']; ?> sub kriteria terkait
+                            </span>
                         </p>
                     </div>
-
-                    <div class="training-edit-current-status">
-                        <?php
-                        $decision_class = "hasil-badge-default";
-
-                        if(strtoupper($d['keputusan']) == "LAYAK"){
-                            $decision_class = "hasil-badge-layak";
-                        } elseif(strtoupper($d['keputusan']) == "TIDAK LAYAK"){
-                            $decision_class = "hasil-badge-tidak";
-                        }
-                        ?>
-
-                        <span class="<?php echo $decision_class; ?>">
-                            <?php echo $d['keputusan']; ?>
-                        </span>
-                    </div>
                 </div>
 
-                <div class="training-edit-info-box">
+                <div class="kriteria-edit-info-box">
                     <span class="glyphicon glyphicon-info-sign"></span>
-                    Form ini hanya mengubah data utama training. Untuk mengubah nilai kriteria, buka tombol Nilai pada
-                    halaman Data Training.
+                    Perubahan nama kriteria akan berpengaruh pada tampilan kolom di data training, testing, dan proses
+                    metode.
                 </div>
 
-                <form action="training_proses.php?proses=prosesubah" method="post" enctype="multipart/form-data">
+                <form action="kriteria_proses.php?proses=prosesubah" method="post">
 
-                    <div class="training-edit-form-grid">
+                    <div class="kriteria-edit-form-grid">
 
-                        <div class="form-group training-edit-field">
-                            <label>Kode Training</label>
-                            <input type="text" readonly class="form-control" name="kode_nama"
-                                value="<?php echo $d['kode_nama']; ?>">
+                        <div class="form-group kriteria-edit-field">
+                            <label>Kode Kriteria</label>
+                            <input name="kode_kriteria" type="text" class="form-control"
+                                value="<?php echo $data['kode_kriteria']; ?>" readonly>
                         </div>
 
-                        <div class="form-group training-edit-field">
-                            <label>Nama Training</label>
-                            <input name="nama" type="text" value="<?php echo $d['nama']; ?>" class="form-control"
-                                autocomplete="off" required>
+                        <div class="form-group kriteria-edit-field">
+                            <label>Nama Kriteria</label>
+                            <input name="nama_kriteria" type="text" class="form-control"
+                                value="<?php echo $data['nama_kriteria']; ?>" autocomplete="off" required>
                         </div>
 
                     </div>
 
-                    <div class="form-group training-edit-address-field">
-                        <label>Alamat</label>
-                        <input name="alamat" type="text" class="form-control" placeholder="Masukkan alamat"
-                            autocomplete="off" required value="<?php echo $d['alamat']; ?>">
+                    <div class="form-group kriteria-edit-description-field">
+                        <label>Keterangan</label>
+                        <textarea name="keterangan" class="form-control" rows="5"
+                            placeholder="Masukkan keterangan kriteria"
+                            required><?php echo $data['keterangan']; ?></textarea>
                     </div>
 
-                    <div class="training-edit-footer">
-                        <a href="training.php" class="btn btn-modern-secondary">
+                    <div class="kriteria-edit-footer">
+                        <a href="kriteria.php" class="btn btn-modern-secondary">
                             <span class="glyphicon glyphicon-remove"></span> Batal
                         </a>
 
