@@ -192,9 +192,9 @@ $d_kriteria = mysql_fetch_array($q_kriteria);
                         <?php
                         $decision_class = "hasil-badge-default";
 
-                        if(strtoupper($d['keputusan']) == "LAYAK"){
+                        if(strtoupper($d['keputusan']) == "Stunting"){
                             $decision_class = "hasil-badge-layak";
-                        } elseif(strtoupper($d['keputusan']) == "TIDAK LAYAK"){
+                        } elseif(strtoupper($d['keputusan']) == "Tidak Stunting"){
                             $decision_class = "hasil-badge-tidak";
                         }
                         ?>

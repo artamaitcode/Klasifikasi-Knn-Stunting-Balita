@@ -389,8 +389,8 @@ $total_nilai = mysql_fetch_array($total_nilai_q);
                             <div class="form-group">
                                 <label>Keputusan</label>
                                 <select name="keputusan" class="form-control" required>
-                                    <option value="LAYAK">LAYAK</option>
-                                    <option value="TIDAK LAYAK">TIDAK LAYAK</option>
+                                    <option value="Stunting">Stunting</option>
+                                    <option value="Tidak Stunting">Tidak Stunting</option>
                                 </select>
                             </div>
 
