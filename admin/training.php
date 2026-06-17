@@ -29,6 +29,7 @@ $sudah = mysql_fetch_array($sudah_q);
 
 $belum_q = mysql_query("SELECT COUNT(*) AS total FROM tbl_namatraining WHERE keputusan='?' OR keputusan=''");
 $belum = mysql_fetch_array($belum_q);
+
 ?>
 
 <div class="container-fluid">
@@ -114,9 +115,18 @@ $belum = mysql_fetch_array($belum_q);
                     <p>Kelola data training sebagai data acuan dalam proses klasifikasi metode K-Nearest Neighbor.</p>
                 </div>
 
-                <button data-toggle="modal" data-target="#myModal" class="btn btn-modern-primary">
-                    <span class="glyphicon glyphicon-plus"></span> Tambah Data
-                </button>
+                <div>
+                    <button data-toggle="modal" data-target="#modalImportCSV" class="btn btn-modern-secondary">
+                        <span class="glyphicon glyphicon-upload"></span> Import CSV
+                    </button>
+                    <button data-toggle="modal" data-target="#modalHapusSemua" class="btn btn-modern-danger">
+                        <span class="glyphicon glyphicon-trash"></span> Hapus Semua
+                    </button>
+
+                    <button data-toggle="modal" data-target="#myModal" class="btn btn-modern-primary">
+                        <span class="glyphicon glyphicon-plus"></span> Tambah Data
+                    </button>
+                </div>
             </div>
 
             <div class="row dashboard-summary">
@@ -188,6 +198,17 @@ $belum = mysql_fetch_array($belum_q);
                     <a href="training.php" class="btn btn-modern-secondary">
                         <span class="glyphicon glyphicon-refresh"></span> Reset
                     </a>
+                    <?php if(isset($_GET['hapussemua']) && $_GET['hapussemua']=="berhasil"){ ?>
+                    <div class="alert alert-danger" style="margin-top:15px;">
+                        Semua data training berhasil dihapus.
+                    </div>
+                    <?php } ?>
+                    <?php if(isset($_GET['import'])){ ?>
+                    <div class="alert alert-info" style="margin-top:15px;">
+                        Import CSV selesai. Berhasil: <?php echo (int)$_GET['sukses']; ?> data,
+                        Gagal: <?php echo (int)$_GET['gagal']; ?> data.
+                    </div>
+                    <?php } ?>
                     <?php } ?>
                 </div>
 
@@ -366,6 +387,87 @@ $belum = mysql_fetch_array($belum_q);
                 </div>
             </div>
         </div>
+        <div id="modalImportCSV" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
 
+                    <div class="modal-header">
+                        <button type="button" style="color: white;" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+
+                        <h5 class="modal-title">
+                            <span class="glyphicon glyphicon-upload"></span> Import Data Training CSV
+                        </h5>
+                    </div>
+
+                    <div class="modal-body">
+                        <form action="training_proses.php?proses=prosesimportcsv" method="post"
+                            enctype="multipart/form-data">
+
+                            <div class="form-group">
+                                <label>File CSV</label>
+                                <input type="file" name="file_csv" class="form-control" accept=".csv" required>
+                                <small>
+                                    Format kolom:
+                                    kode_nama;nama;alamat;jenis_kelamin;berat_lahir;umur;tb_lahir;lingkar_badan;lingkar_lengan;keputusan
+                                </small>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-modern-secondary" data-dismiss="modal">
+                                    Batal
+                                </button>
+
+                                <button type="submit" class="btn btn-modern-primary">
+                                    <span class="glyphicon glyphicon-upload"></span> IMPORT
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div id="modalHapusSemua" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <div class="modal-header" style="background:#dc2626;">
+                        <button type="button" style="color: white;" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+
+                        <h5 class="modal-title">
+                            <span class="glyphicon glyphicon-warning-sign"></span> Hapus Semua Data Training
+                        </h5>
+                    </div>
+
+                    <div class="modal-body">
+                        <p style="font-size:16px;">
+                            Apakah Anda yakin ingin menghapus semua data training?
+                        </p>
+
+                        <p style="color:#dc2626; font-weight:bold;">
+                            Data pada tabel nama training dan nilai kriteria akan terhapus permanen.
+                        </p>
+
+                        <form action="training_proses.php?proses=hapussemua" method="post">
+                            <input type="hidden" name="konfirmasi_hapus" value="YA">
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-modern-secondary" data-dismiss="modal">
+                                    Batal
+                                </button>
+
+                                <button type="submit" class="btn btn-modern-danger">
+                                    <span class="glyphicon glyphicon-trash"></span> Ya, Hapus Semua
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 </div>
