@@ -467,7 +467,6 @@ if($kode_nama_get != ""){
 
                             <tr>
                                 <td class="text-center"><?php echo $no++; ?></td>
-
                                 <td>
                                     <div class="training-user">
                                         <div class="training-avatar">
